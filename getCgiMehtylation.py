@@ -5,7 +5,7 @@ This script returns the average methyaltion frequency per CpG island for a given
 The returned value is the weighted average of methylation probability, which is calculated among all reads, that cover the CpG islands. 
 The weight is the coverage.
 
-Take care: this script runs very long! (Multiple days)
+Take care: this script runs very long (up to days)!
 
 Contact:
 daria.meyer@uni-jena.de
