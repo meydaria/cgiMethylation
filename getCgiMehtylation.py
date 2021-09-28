@@ -19,7 +19,6 @@ Usage:
 
 Required Arguments:
 	 --sample <sample>                        	Path to the freq-perCG.tsv file, that contains the methylation frequency per CpG site. 
-	 --name <name>								Sample name
 	 --outfile <outfile>                        Outfile in which the result will be stored
 
 Options:
@@ -42,7 +41,6 @@ from docopt import docopt
 args = docopt(__doc__)
 
 sample_infile = args['--sample']
-sample_name = args['--name']	
 outfile = args['--outfile']	
 
 
@@ -57,11 +55,9 @@ cgis = pd.read_csv(cgis_infile, sep="\t", names=["chromosome", "start", "stop", 
 # cgis["chromosome"] = cgis["chromosome"].str[3:]
 
 ## Methylation data
-## hnoPool_megalodon = pd.read_csv(hnoPool_megalodon, sep="\t", names=["chromosome", "start_position", "stop_position", "coverage", "methylation_frequency", "strand"], header=0, dtype={0: str}, nrows = 1000) 
 sample_methylations = pd.read_csv(sample_infile, sep="\t", dtype={0: str}) 
 sample_methylations.name = sample_name
 
-print("sample name= " + sample_name)
 print("dataframe: ")
 print(sample_methylations)
 
@@ -75,15 +71,12 @@ d = []
 for (index, cgi_chro, cgi_start, cgi_end, cgi_id, cpg_num) in cgis.itertuples():
 	line = {}
 	cgi_id = cgi_id.strip()
-	## add this line, to get information about the CpG island
 	line["cgi_id"]= cgi_id 
 	line["cgi_chro"]= cgi_chro
 	line["cgi_start"]= cgi_start
 	line["cgi_end"]= cgi_end
 	# print(line)
-    ## iterate over the different meteore result files
-	# for sample in [hnoPool_megalodon, hnoPool_nanopolish]:
-	# loop_start_time = time.time()
+	
 	## extract only those positions that match to CGIs
 	short_SN = sample_methylations.query('Chr == @cgi_chro & @cgi_start <= Pos_start & Pos_start <= @cgi_end')
 	## if data exists for this METEORE sample for the given CpG island
@@ -99,16 +92,13 @@ for (index, cgi_chro, cgi_start, cgi_end, cgi_id, cpg_num) in cgis.itertuples():
 	## append the dictionary containing data for one sample (eg. hnoPool_megalodon) to d
 	# print(line)
 	d.append(line)
-
-	# print(d)
-    ## get a intermediate result after 20 entries
-	# if(cgi_id == " cgi_1"):
+	
+    	## get a intermediate result after 20 entries
+	# if(cgi_id == " cgi_3"):
 	# 	result = pd.DataFrame(d)
-	# 	result.to_csv('/data/dessertlocal/daria/hncData_oncgnostcs/tmp_average_methylation.txt', index = False)
-
-	# loop_time = time.time() - loop_start_time
+	# 	result.to_csv( (str(outfile) + "_tmp"), index = False)
+	
 	# total_time = time.time() - total_start_time
-
 	# print(f'### {cgi_id} finished. Took {total_time} so far.')
 	# now = time.time() - start_time
 	# print(f'finished cgi_island {cgi_id} took {now}')
