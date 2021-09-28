@@ -89,6 +89,7 @@ for (index, cgi_chro, cgi_start, cgi_end, cgi_id, cpg_num) in cgis.itertuples():
 			result.to_csv('tmp_average_methylation.txt', index = False)
 			weighted_average = float("NaN")
 		line[sample_methylations.name] = weighted_average
+		line["Coverage"] = short_SN['Coverage']
 	## append the dictionary containing data for one sample (eg. hnoPool_megalodon) to d
 	# print(line)
 	d.append(line)
