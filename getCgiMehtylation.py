@@ -57,15 +57,9 @@ cgis = pd.read_csv(cgis_infile, sep="\t", names=["chromosome", "start", "stop", 
 # cgis["chromosome"] = cgis["chromosome"].str[3:]
 
 ## Methylation data
-# hnoPool_megalodon="/data/dessertlocal/daria/hncData_oncgnostcs/meteore/megalodon_results/hnoPool_megalodon-freq-perCG.tsv"
-# hnoPool_nanopolish="/data/dessertlocal/daria/hncData_oncgnostcs/meteore/nanopolish_results/hnoPool_nanopolish-freq-perCG.tsv"
-
-## format the data
 ## hnoPool_megalodon = pd.read_csv(hnoPool_megalodon, sep="\t", names=["chromosome", "start_position", "stop_position", "coverage", "methylation_frequency", "strand"], header=0, dtype={0: str}, nrows = 1000) 
 sample_methylations = pd.read_csv(sample_infile, sep="\t", dtype={0: str}) 
 sample_methylations.name = sample_name
-# hnoPool_nanopolish = pd.read_csv(hnoPool_nanopolish, sep="\t", dtype={0: str}) 
-# hnoPool_nanopolish.name = 'hnoPool_nanopolish'
 
 print("sample name= " + sample_name)
 print("dataframe: ")
