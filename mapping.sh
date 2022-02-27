@@ -85,22 +85,46 @@ else
 	echo "Skip quality contol!"
 fi
 
+
+# get amount of reads
+echo "Amount of basecalled reads:"
+awk '{s++}END{print s/4}' "${DIR}/${SAMPLE}.fastq"  # Anzahl der Zeilen /4
+# get amount of bases
+echo "Amount of basecalled bases:"
+awk 'BEGIN{sum=0;}{if(NR%4==2){sum+=length($0);}}END{print sum;}' "${DIR}/${SAMPLE}.fastq"
+
+
 ## calculate coverage if wanted
 if "$coverageBool"; then
 	echo "## Calculating the coverage..."
-	# get coverage on CpG islands
-	echo "Coverage of CpG islands on average:"
-	samtools depth -a -b $cpgIslands/humanCpG_islands.bed $DIR/${SAMPLE}.sorted.bam | awk 'BEGIN{SUM=0}{sum+=$3}END{print sum/24200434}'  
+	mosdepth --no-per-base --by $cpgIslands/humanCpG_islands.bed ${SAMPLE} $readData/${SAMPLE}.sorted.bam  
 	# get coverage of the human genome: 
 	echo "Coverage of the human genome on average:"
-	hg38_size=$(grep -v ">" $GENOME | wc | awk '{print $3-$1}')          # 3257347282
-	samtools depth "${DIR}/${SAMPLE}.sorted.bam" | awk -v hsa_size=$hg38_size '{sum+=$3} END { print "Sum = ",sum,"Average = ",sum/hsa_size}' 
+	tail -n2 t0004c_versuch_2022_0056.mosdepth.summary.txt | head -n 1 | cut -f4
 	## Coverage per CpG island
-	nice bash $scripts/getCoverage_samtoolsUCSC.sh -p $cpgIslands/humanCpG_islands.bed -b "${DIR}/${SAMPLE}.sorted.bam" -o "${DIR}/cgiCoverage.txt"
-	# get amount of reads
-	echo "Amount of basecalled reads:"
-	awk '{s++}END{print s/4}' "${DIR}/${SAMPLE}.fastq"  # Anzahl der Zeilen /4
-	# get amount of bases
-	echo "Amount of basecalled bases:"
-	awk 'BEGIN{sum=0;}{if(NR%4==2){sum+=length($0);}}END{print sum;}' "${DIR}/${SAMPLE}.fastq"
+	echo "Coverage over all CpG islands:"
+	tail -n1 t0004c_versuch_2022_0056.mosdepth.summary.txt | cut -f4
 fi 
+
+
+
+
+# ## calculate coverage if wanted
+# if "$coverageBool"; then
+# 	echo "## Calculating the coverage..."
+# 	# get coverage on CpG islands
+# 	echo "Coverage of CpG islands on average:"
+# 	samtools depth -a -b $cpgIslands/humanCpG_islands.bed $DIR/${SAMPLE}.sorted.bam | awk 'BEGIN{SUM=0}{sum+=$3}END{print sum/24200434}'  
+# 	# get coverage of the human genome: 
+# 	echo "Coverage of the human genome on average:"
+# 	hg38_size=$(grep -v ">" $GENOME | wc | awk '{print $3-$1}')          # 3257347282
+# 	samtools depth "${DIR}/${SAMPLE}.sorted.bam" | awk -v hsa_size=$hg38_size '{sum+=$3} END { print "Sum = ",sum,"Average = ",sum/hsa_size}' 
+# 	## Coverage per CpG island
+# 	nice bash $scripts/getCoverage_samtoolsUCSC.sh -p $cpgIslands/humanCpG_islands.bed -b "${DIR}/${SAMPLE}.sorted.bam" -o "${DIR}/cgiCoverage.txt"
+# 	# get amount of reads
+# 	echo "Amount of basecalled reads:"
+# 	awk '{s++}END{print s/4}' "${DIR}/${SAMPLE}.fastq"  # Anzahl der Zeilen /4
+# 	# get amount of bases
+# 	echo "Amount of basecalled bases:"
+# 	awk 'BEGIN{sum=0;}{if(NR%4==2){sum+=length($0);}}END{print sum;}' "${DIR}/${SAMPLE}.fastq"
+# fi 
