@@ -2,48 +2,55 @@
 
 ############################################################################################
 ## This script compares the methylation information per CpG island for different samples ##  
+## Input:                                                                                ## 
+##    - tab-separated file with average methylation per CpG island for control sample    ##
+##    - tab-separated file with average methylation per CpG island for tumor sample      ## 
+##    - optional: output folder                                                          ##
 ## Output:                                                                               ##
-## -  a plot comparing the average methylation per CpG island                            ##
-## - the file "differential_coordinates.csv" containing the following information        ##
+##    - a plot comparing the average methylation per CpG island                          ##
+##    - the file "differential_coordinates.csv" containing the following information     ##
 ##      cgi_chro    cgi_start   cgi_end    cgi_id                                        ##
 ############################################################################################
 
-setwd("/data/dessertlocal/daria/sepsisData_oncgnostic/")
-setwd("/run/user/1000/gvfs/sftp:host=gsuffa.bioinf.uni-jena.de,user=nu36par")
+# get command line arguments
+args = commandArgs(trailingOnly=TRUE)
 
-meteore_results="/run/user/1000/gvfs/sftp:host=gsuffa.bioinf.uni-jena.de,user=nu36par/data/dessertlocal/daria/sepsisData_oncgnostic/methylation_calling/meteore_results/"
-methylationFolder="/run/user/1000/gvfs/sftp:host=gsuffa.bioinf.uni-jena.de,user=nu36par/data/dessertlocal/daria/sepsisData_oncgnostic/methylation_calling/methylation_analysis/"
-coverage = "/run/user/1000/gvfs/sftp:host=gsuffa.bioinf.uni-jena.de,user=nu36par/data/dessertlocal/daria/sepsisData_oncgnostic/coverage/"
-mainFolder = "/run/user/1000/gvfs/sftp:host=gsuffa.bioinf.uni-jena.de,user=nu36par/data/dessertlocal/daria/"
 
+# test if there is at least one argument: if not, return an error
+if (length(args)<2) {
+  stop("Two input files have to be given: first the control, than the tumor sample", call.=FALSE)
+} else if(length(args)==2){
+  # set default directory for output files
+  args[3] = getwd()
+}
 
 ## read in the average methylation per CpG island for both sample
-t0044c_nanopolish = read.table(paste(mainFolder, "hncData_oncgnostics/t0044c/averageMethylation_t0044c_nanopolish_perCGI.txt", sep = ""), header = TRUE, sep = "\t")
-ah01_nanopolish = read.table(paste(mainFolder, "sepsisData_oncgnostic/ah01/averageMethylation_ah01_nanopolish_perCGI.txt", sep = ""), header = TRUE, sep = "\t")
-# ah01_nanopolish = read.table(paste(mainFolder, "sepsisData_oncgnostic/methylation_calling/methylation_analysis/averageMethylation_perCGI_control_nanopolish.txt", sep = ""), header = TRUE, sep = "\t")
+control = read.table(args[1], header = TRUE, sep = "\t")
+tumor = read.table(args[2], header = TRUE, sep = "\t")
+outdir = args[3]
 
 ## throw away all CpG isalnds with an coverage <3
-ah01_nanopolish = ah01_nanopolish[which(ah01_nanopolish$Coverage>3),]
-t0044c_nanopolish = t0044c_nanopolish[which(t0044c_nanopolish$Coverage>3),]
-## delete the coverage column
-t0044c_nanopolish$Coverage <- NULL
-ah01_nanopolish$Coverage <- NULL
-# ah01_nanopolish$cgi_chro <- NULL
+control = control[which(control$coverage>3),]
+tumor = tumor[which(tumor$coverage>3),]
 
+## remove the coverage column
+tumor$coverage <- NULL
+control$coverage <- NULL
 
 ## merge the two dataframes
-t0044c_merged = merge(t0044c_nanopolish, ah01_nanopolish, by = c("cgi_id", "cgi_chro", "cgi_start", "cgi_end"))
+mergedData = merge(tumor, control, by = c("cgi_id", "cgi_chro", "cgi_start", "cgi_end"))
 
 ## plot comparison of all CpG islands
-png(paste(mainFolder, "hncData_oncgnostics/t0044c/plots/averageMethylation_vs_ah01.png", sep = ""), width = 800, height = 600)
-plot(t0044c_merged$ah01_nanopolish, t0044c_merged$t0044c_nanopolish, pch = 16,
-     xlab = "av. methylation ah01",
-     ylab = "av. methylation T0044-C")
+png(paste(outdir, "averageMethylation_plot.png", sep = ""), width = 800, height = 600)
+plot(mergedData$control, mergedData$tumor, pch = 16,
+     xlab = "av. methylation control",
+     ylab = "av. methylation tumor",
+     main = "Average methylation per CpG island")
 dev.off()
 
 ## select interesting CpG islands and write their coordinates to file
-differential = t0044c_merged[which((t0044c_merged$ah01_nanopolish==0) & (t0044c_merged$t0044c_nanopolish>0.7)),]
+differential = mergedData[which((mergedData$control==0) & (mergedData$tumor>0.7)),]
 differential_coordinates = differential[,c("cgi_chro", "cgi_start", "cgi_end", "cgi_id")]
-write.table(differential_coordinates, paste(mainFolder, "hncData_oncgnostics/t0044c/cgiMethylations/differential_coordinates.csv", sep = ""), sep = ";", row.names = FALSE, quote = FALSE)
+write.table(differential_coordinates, paste(outdir, "differentialMethylation_coordinates.csv", sep = ""), sep = ";", row.names = FALSE, quote = FALSE)
 
 
