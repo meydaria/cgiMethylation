@@ -12,7 +12,6 @@ import argparse
 import os
 import sys
 import pandas as pd
-import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Visualize DNA methylation per CpG dinucleotide for a given region.')
 
@@ -26,8 +25,7 @@ parser.add_argument('-i', '--infile',
 					type = str,
 					required=True)
 
-parser.add_argument('-o', '--outdir', help='Output directory name where images and methylation subfiles will be stored')
-# parser.add_argument('-s', '--single', help='Additionally create single plot for each sample and each position')
+parser.add_argument('-o', '--outdir', help='Output directory name where methylation subfiles will be stored')
 
 args = parser.parse_args()
 
@@ -95,11 +93,7 @@ def get_regioMeth(methFiles, chro, start, stop):
 		## create a pandas dataframe of the resulting lines	
 		tmp = pd.DataFrame(lines, columns =['chromosome', 'position', 'strand', 'methylation', 'read_id'])
 		tmp = tmp.astype({'position': float, 'methylation':float})
-		# print(tmp.head())
-		# print(tmp.info())
 		
-		## for Python: rename the column with the log likelihood ratios to the sample name (needed for python)
-		# tmp.rename(columns = {'methylation':sample}, inplace = True)
 		## for R: add a column containing the sample name, needed for R
 		tmp['sample'] = sample
 		
@@ -107,45 +101,9 @@ def get_regioMeth(methFiles, chro, start, stop):
 	## concatenate the different dataframes into one big dataframe 
 	print("Concatenating dataframes...")
 	df = pd.concat(li, axis=0, ignore_index=True)
-	# df = df.set_index('position')
 	return(df)
 
-
-
-
-def plot_methData(df, name, outdir, chro):
-	"""
-	Plot the DNA methylation per position from a given dataframe into a png file which is stored in the given output directory
-	"""
-
-	#TODO: find a way to correctly set the x-axis ticks
-
-	xlabel = "Position on Chr. " + chro
-	plt = df.plot(x = "position", marker = '.', xlabel = xlabel)
-	plt.ticklabel_format(style='plain')
-	fig = plt.get_figure()
-	fn = name + ".png"
-	fig.savefig(os.path.join(outdir,fn)) 
 	
-	# ## Second approach
-	# xlabel = "Position on Chr. " + chro
-	# ax = df.plot(x = "position", marker = '.', xlabel = xlabel)
-	# print(df.position-df.position[0])
-	# ax.set_xticks(df.position-df.position[0])   # define the position of the x-axis ticks
-	# ax.set_xticklabels(df.position, rotation=90)	# define the value of the x-axis ticks
-	# fig = ax.get_figure()
-	# fn = name + ".png"
-	# fig.savefig(os.path.join(outdir,fn)) 
-
-	# Third approach
-	# plt.figure()
-	# # df.plot()
-	# df.plot(marker = '.')
-	# plt.xlabel("Position on Chr. " + chro)
-	# plt.xticklabels(df.index, df.position)
-	# plt.ticklabel_format(style='plain')
-	# fn = name + ".png"    
-	# plt.savefig(os.path.join(outdir,fn))
 
 
 ## MAIN 
@@ -161,27 +119,4 @@ for region in bed:
 		name = region[0] + "_" + region[1] + "_" + region[2]
 	
 	df.to_csv(os.path.join(outdir, name+".csv"))
-	## plot the methylation data for this region
-	# print(f"Plotting the dataframe for marker {region[3]} now to {outdir}")
-	# plot_methData(df, name, outdir, region[0])
 
-
-
-
-
-
-
-
-
-## plot with seaborn
-# plot = sns.lineplot(
-#     data=df, x="position", y="methylation", style = "chromosome", 
-#     markers=True, dashes=False
-# )
-# fig = plot.get_figure()
-# fig.savefig(os.path.join(outdir,"out.png")) 
-
-## plot with mathplotlib
-# plt.plot(range(10), linestyle='--', marker='o', color='b', label='line with marker')
-# plt.legend()
-# plt.savefig(os.path.join(outdir,"out.png"))
