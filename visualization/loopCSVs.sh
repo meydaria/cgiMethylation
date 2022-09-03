@@ -10,5 +10,5 @@ for f in $files
 do
   echo "Processing $f file..."
   # take action on each file. $f store current file name
-  Rscript plotMethylation.R -f $f -o $outfolder
+  Rscript /home/nu36par/scripts/ontAnalyses/visualization/plotMethylation.R -f $f -o $outfolder
 done

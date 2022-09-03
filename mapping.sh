@@ -60,7 +60,6 @@ fi
 # 	# rm $DIR/fastq_runid*.fastq
 # fi
 
-
 ## mapping
 if [[ -f "${DIR}/${SAMPLE}.sorted.bam" ]]; then
 	### Error if file already exists ###
@@ -71,15 +70,22 @@ else
 		echo "## Mapping with minimap2 ..."
 		nice minimap2 -a -x map-ont $GENOME "${DIR}/${SAMPLE}.fastq" | samtools sort -T tmp -o "${DIR}/${SAMPLE}.sorted.bam"
 		samtools index "${DIR}/${SAMPLE}.sorted.bam"
+	else
+		echo "Warning: The file ${DIR}/${SAMPLE}.fastq does not exist! Cannot do the mapping."
 	fi
 fi
 
+
 ## quality control
 if [[ -f "${DIR}/sequencing_summary.txt" ]]; then
-	source /home/nu36par/miniconda3/etc/profile.d/conda.sh
-	conda activate pycoQC
-	echo "## Quality Control with pycoQC ..."
-	pycoQC -f "${DIR}/sequencing_summary.txt" -a "${DIR}/${SAMPLE}.sorted.bam" -o "${DIR}/pycoQC.html"
+	if [[ -f "${DIR}/pycoQC.html" ]]; then
+		echo "pycoQC report already exist. Skippeng Quality Control"
+	else
+		source /home/nu36par/miniconda3/etc/profile.d/conda.sh
+		conda activate pycoQC
+		echo "## Quality Control with pycoQC ..."
+		pycoQC -f "${DIR}/sequencing_summary.txt" -a "${DIR}/${SAMPLE}.sorted.bam" -o "${DIR}/${SAMPLE}_pycoQC.html"
+	fi
 else
 	echo "Warning: The file ${DIR}/sequencing_summary.txt does not exist. Therefore no pycoQC-Report can be generated"
 	echo "Skip quality contol!"
@@ -97,13 +103,15 @@ awk 'BEGIN{sum=0;}{if(NR%4==2){sum+=length($0);}}END{print sum;}' "${DIR}/${SAMP
 ## calculate coverage if wanted
 if "$coverageBool"; then
 	echo "## Calculating the coverage..."
-	mosdepth --no-per-base --by $cpgIslands/humanCpG_islands.bed ${SAMPLE} $readData/${SAMPLE}.sorted.bam  
+	source /home/nu36par/miniconda3/etc/profile.d/conda.sh
+	conda activate coverage
+	mosdepth --no-per-base --by $cpgIslands/humanCpG_islands.bed ${DIR}/${SAMPLE} ${DIR}/${SAMPLE}.sorted.bam  
 	# get coverage of the human genome: 
 	echo "Coverage of the human genome on average:"
-	tail -n2 t0004c_versuch_2022_0056.mosdepth.summary.txt | head -n 1 | cut -f4
+	tail -n2 ${DIR}/${SAMPLE}.mosdepth.summary.txt | head -n 1 | cut -f4
 	## Coverage per CpG island
 	echo "Coverage over all CpG islands:"
-	tail -n1 t0004c_versuch_2022_0056.mosdepth.summary.txt | cut -f4
+	tail -n1 ${DIR}/${SAMPLE}.mosdepth.summary.txt | cut -f4
 fi 
 
 
